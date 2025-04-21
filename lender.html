@@ -219,7 +219,7 @@
       document.getElementById('selected-lenders').innerHTML = selected.length ? selected.join('\n') : 'None selected';
     }
 
-    fetch('/test.txt')
+    fetch('test.json')
       .then(res => res.json())
       .then(funderRules => {
         const borrower = JSON.parse(localStorage.getItem('borrowerData')) || {};
