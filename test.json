@@ -18,9 +18,8 @@
       { "industry": "construction", "revenueLT": 50000 },
       { "industry": "auto sales", "revenueLT": 100000 }
     ]
-  }
 },
-"AlternativeFunder": {
+"Alternative": {
     "positionsAccepted": [1, 2, 3, 4],
     "minFICO": 550,
     "minRevenueMonthly": 20000,
@@ -211,7 +210,6 @@
     ],
     "restrictedStates": ["HI", "AK", "PR", "Canada"],
     "conditionalDeclineRules": []
-  }
 },
 "CreationCapital": {
     "positionsAccepted": [1, 2, 3, 4, 5, 6, 7],
@@ -299,7 +297,6 @@
     ],
     "restrictedStates": ["CA", "Hawaii", "Alaska", "Puerto Rico"],
     "conditionalDeclineRules": []
-  }
 },
 "Fintap": {
     "positionsAccepted": [1, 2, 3],
@@ -409,7 +406,6 @@
     "restrictedIndustries": ["Casinos", "Financial Brokers", "Funding Institutions"],
     "restrictedStates": ["CA", "NY"],
     "conditionalDeclineRules": []
-  }
 },
 "Radiance": {
     "positionsAccepted": [1, 2, 3],
@@ -620,7 +616,6 @@
     "restrictedIndustries": ["CPA", "Cannabis"],
     "restrictedStates": ["CA", "NY"],
     "conditionalDeclineRules": []
-  }
 },
  "Vox": {
     "positionsAccepted": [1],
@@ -679,7 +674,6 @@
     "restrictedIndustries": [],
     "restrictedStates": ["CA"],
     "conditionalDeclineRules": []
-  }
 },
 "LastChance": {
     "positionsAccepted": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
