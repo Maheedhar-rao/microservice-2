@@ -38,8 +38,7 @@
       { "industry": "construction", "revenueLT": 75000 },
       { "industry": "trucking", "revenueLT": 75000 }
     ]
-  }
-},
+  },
 "Arena": {
   "positionsAccepted": [1, 2, 3, 4],
   "minFICO": 600,
