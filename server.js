@@ -120,12 +120,9 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { error: insertError, data: inserted } = await supabase.from('Live submissions').insert([{
     business_name: businessName,
     lender_names: selectedOptions.join(', '),
-    lenders_sent_to: selectedOptions,
     docs: uploadedFiles.join(', '),
     message: enteredData,
     dealid: nextDealId,
-    status: 'pending',
-    reply_progress: `0/${selectedOptions.length}`
   }]);
 
   if (insertError) {
