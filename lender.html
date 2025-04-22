@@ -268,47 +268,117 @@
 ];
 
         const lenderGrid = document.getElementById('lender-grid');
-        lenders.forEach(lender => {
-            const div = document.createElement('div');
-            div.classList.add('lender');
-            div.textContent = lender;
-            div.onclick = function() {
-                div.classList.toggle('selected');
-                updateSelectedLenders();
-            };
-            lenderGrid.appendChild(div);
-        });
+lenders.forEach(lender => {
+    const div = document.createElement('div');
+    div.classList.add('lender');
+    div.textContent = lender;
+    div.onclick = function() {
+        div.classList.toggle('selected');
+        updateSelectedLenders();
+    };
+    lenderGrid.appendChild(div);
+});
 
-        function updateSelectedLenders() {
-            const selected = [...document.querySelectorAll('.lender.selected')].map(el => el.textContent);
-            document.getElementById('selected-lenders').innerHTML = selected.length ? selected.join('<br>') : 'None selected';
-        }
-        const selectedFiles = [];
+function updateSelectedLenders() {
+    const selected = [...document.querySelectorAll('.lender.selected')].map(el => el.textContent);
+    document.getElementById('selected-lenders').innerHTML = selected.length ? selected.join('<br>') : 'None selected';
+}
 
-        document.getElementById('file-upload').addEventListener('change', function(event) {
+const selectedFiles = [];
+
+document.getElementById('file-upload').addEventListener('change', async function(event) {
     const files = Array.from(event.target.files);
     let totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
 
     for (let file of files) {
         totalSize += file.size;
-        
-        // Prevent total size exceeding 25MB
+
         if (totalSize > 25 * 1024 * 1024) {
             alert('Total file size exceeds 25MB. Please remove some files.');
             return;
         }
 
-        selectedFiles.push(file);
+        let watermarkedFile;
+        if (file.type.startsWith('image/')) {
+            watermarkedFile = await addImageWatermark(file, 'logo-pcp.png');
+        } else if (file.type === 'application/pdf') {
+            watermarkedFile = await addPDFWatermark(file, 'CONFIDENTIAL', 'logo-pcp.png');
+        } else {
+            watermarkedFile = file;
+        }
+
+        selectedFiles.push(watermarkedFile);
     }
 
-    document.getElementById('file-upload').value = ''; // Reset file input
+    document.getElementById('file-upload').value = '';
     updateFileList();
 });
 
+async function addImageWatermark(file, logoPath) {
+    const img = await createImageBitmap(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    ctx.font = 'bold 48px sans-serif';
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('CONFIDENTIAL', canvas.width / 2, canvas.height / 2 + 80);
+
+    const logo = new Image();
+    logo.src = logoPath;
+    await logo.decode();
+    const logoSize = 100;
+    ctx.drawImage(logo, canvas.width / 2 - logoSize / 2, canvas.height / 2 - logoSize / 2, logoSize, logoSize);
+
+    return new Promise(resolve => {
+        canvas.toBlob(blob => {
+            resolve(new File([blob], file.name, { type: file.type }));
+        }, file.type);
+    });
+}
+
+async function addPDFWatermark(file, text, logoPath) {
+    const existingPdfBytes = await file.arrayBuffer();
+    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+    const pages = pdfDoc.getPages();
+
+    const res = await fetch(logoPath);
+    const logoBytes = await res.arrayBuffer();
+    const logoImage = await pdfDoc.embedPng(logoBytes);
+
+    for (const page of pages) {
+        const { width, height } = page.getSize();
+        const logoWidth = 100;
+        const logoHeight = 100;
+
+        page.drawImage(logoImage, {
+            x: (width - logoWidth) / 2,
+            y: (height - logoHeight) / 2 + 30,
+            width: logoWidth,
+            height: logoHeight,
+            opacity: 0.4
+        });
+
+        page.drawText(text, {
+            x: width / 2 - (text.length * 6),
+            y: height / 2 - 40,
+            size: 24,
+            color: PDFLib.rgb(1, 0, 0),
+            opacity: 0.3
+        });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    return new File([pdfBytes], file.name, { type: 'application/pdf' });
+}
 
 function updateFileList() {
     const fileListDiv = document.getElementById('file-list');
-    fileListDiv.innerHTML = ''; // Clear previous files
+    fileListDiv.innerHTML = '';
 
     selectedFiles.forEach((file, index) => {
         const listItem = document.createElement('div');
@@ -319,7 +389,6 @@ function updateFileList() {
         listItem.style.fontSize = '14px';
         listItem.style.fontWeight = 'bold';
 
-        // Display image preview if it's an image
         if (file.type.startsWith('image/')) {
             const img = document.createElement('img');
             img.src = URL.createObjectURL(file);
@@ -331,12 +400,10 @@ function updateFileList() {
             listItem.appendChild(img);
         }
 
-        // File name
         const fileName = document.createElement('span');
         fileName.textContent = file.name;
         listItem.appendChild(fileName);
 
-        // Remove Button (❌)
         const removeBtn = document.createElement('span');
         removeBtn.innerHTML = ' ❌';
         removeBtn.style.cursor = 'pointer';
