@@ -464,28 +464,29 @@ function submitForm() {
     }
 
     fetch('/send-email', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message === 'Submission successful!') {
-            alert('Submission successful! Redirecting to Thank You page...');
-            window.location.href = '/thankyou.html';  // Redirect to Thank You page
-        } else {
-            alert('Something went wrong! Please try again.');
-            submitButton.disabled = false;
-            submitButton.style.background = 'linear-gradient(to right, #ff512f, #dd2476)';
-            submitButton.textContent = 'Submit';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error submitting. Please try again.');
-        submitButton.disabled = false;
-        submitButton.style.background = 'linear-gradient(to right, #ff512f, #dd2476)';
-        submitButton.textContent = 'Submit';
-    });
+  method: 'POST',
+  body: formData
+})
+.then(response => {
+  if (response.redirected) {
+    window.location.href = response.url; // Follow the redirect
+  } else {
+    return response.json();
+  }
+})
+.then(data => {
+  if (data?.message === 'Submission successful!') {
+    window.location.href = '/thankyou.html';
+  }
+})
+.catch(error => {
+  console.error('Error submitting:', error);
+  alert('Error submitting. Please try again.');
+  submitButton.disabled = false;
+  submitButton.style.background = 'linear-gradient(to right, #ff512f, #dd2476)';
+  submitButton.textContent = 'Submit';
+});
+
 }
 // ⬇️ Auto-match logic from localStorage
 fetch('test.json')
