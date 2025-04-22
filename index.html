@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lender Match Input</title>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 2px solid #3498db;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #3498db, #9b59b6);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+  <h2>Enter Borrower Profile</h2>
+  <input type="text" id="minFICO" placeholder="FICO Score">
+  <input type="text" id="minRevenueMonthly" placeholder="Monthly Revenue ($)">
+  <input type="text" id="minADB" placeholder="Average Daily Balance ($)">
+  <input type="text" id="minTIB" placeholder="Time in Business (months)">
+  <input type="text" id="maxNegativeDaysPerMonth" placeholder="Negative Days">
+  <select id="bankruptcy">
+    <option value="no">Bankruptcy: No</option>
+    <option value="yes">Bankruptcy: Yes</option>
+  </select>
+  <input type="text" id="industry" placeholder="Industry">
+  <input type="text" id="restrictedStates" placeholder="State">
+  <input type="text" id="fundingRequested" placeholder="Requested Amount ($)">
+  <button onclick="saveAndRedirect()">Find Lenders</button>
+</div>
+<script>
+  function saveAndRedirect() {
+    const fields = [
+      'minFICO',
+      'minRevenueMonthly',
+      'minADB',
+      'minTIB',
+      'maxNegativeDaysPerMonth',
+      'bankruptcy',
+      'industry',
+      'restrictedStates',
+      'fundingRequested'
+    ];
+    
+    const data = {};
+    fields.forEach(id => {
+      data[id] = document.getElementById(id).value;
+    });
+
+    localStorage.setItem('borrowerData', JSON.stringify(data));
+    window.location.href = 'lender.html';
+  }
+</script>
+</body>
+</html>
