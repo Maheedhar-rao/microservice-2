@@ -408,15 +408,15 @@ function submitForm() {
     });
 }
 // ⬇️ Auto-match logic from localStorage
-fetch('test.json') // Adjust this path based on where you serve the JSON
+fetch('test.json')
   .then(res => res.json())
   .then(funderRules => {
     const borrower = JSON.parse(localStorage.getItem('borrowerData')) || {};
-    const fico = parseInt(borrower.fico || 0);
-    const rev = parseInt((borrower.revenue && borrower.revenue !== '-' ? borrower.revenue : borrower.amount || '0').replace(/[^0-9]/g, ''));
-    const tib = parseInt(borrower.tib_months || (borrower.tib?.match(/\d+/)?.[0] ?? 0));
+    const fico = parseInt(borrower.minFICO || 0);
+    const rev = parseInt(borrower.minRevenueMonthly || borrower.fundingRequested || '0');
+    const tib = parseInt(borrower.minTIB || 0);
     const industry = (borrower.industry || '').toLowerCase();
-    const state = (borrower.state || '').toUpperCase();
+    const state = (borrower.restrictedStates || '').toUpperCase();
 
     console.log('Borrower:', { fico, rev, tib, industry, state });
 
