@@ -83,33 +83,41 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
     return res.status(500).json({ message: 'Email failed to send.', error: err.message });
   }
 
+  const BUCKET = 'Pdf docs';
+  const FOLDER = 'Apps and statements';
   const uploadedFiles = [];
+
   for (const file of files) {
-    const filePath = `submissions/${Date.now()}_${file.originalname}`;
-    const { error } = await supabase.storage
-      .from('Pdf docs/Apps and statements')
+    const filePath = `${FOLDER}/${Date.now()}_${file.originalname}`;
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
       .upload(filePath, file.buffer, {
         contentType: file.mimetype,
         upsert: true
       });
 
-    if (!error) {
-      const { publicURL } = supabase.storage.from('Pdf docs/Apps and statements').getPublicUrl(filePath);
-      uploadedFiles.push(publicURL);
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+      uploadedFiles.push(urlData.publicUrl);
     } else {
-      console.error('❌ File upload failed:', error);
+      console.error('❌ File upload failed:', uploadError);
     }
   }
 
-  const { data: maxData } = await supabase
+  const { data: maxData, error: fetchError } = await supabase
     .from('Live submissions')
     .select('dealid')
     .order('dealid', { ascending: false })
     .limit(1);
 
+  if (fetchError) {
+    console.error('❌ Fetching max dealid failed:', fetchError);
+    return res.status(500).json({ message: 'Error fetching max deal ID' });
+  }
+
   const nextDealId = maxData && maxData[0]?.dealid ? maxData[0].dealid + 1 : 1;
 
-  await supabase.from('Live submissions').insert({
+  const { error: insertError, data: inserted } = await supabase.from('Live submissions').insert([{
     business_name: businessName,
     lender_names: selectedOptions.join(', '),
     lenders_sent_to: selectedOptions,
@@ -118,7 +126,14 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
     dealid: nextDealId,
     status: 'pending',
     reply_progress: `0/${selectedOptions.length}`
-  });
+  }]);
+
+  if (insertError) {
+    console.error('❌ DB insert failed:', insertError);
+    return res.status(500).json({ message: 'DB insert failed', error: insertError.message });
+  }
+
+  console.log('✅ Supabase submission recorded:', inserted);
 
   const statusQuery = `?success=${successList.length}&failed=${failList.join('|')}`;
   res.redirect(`/thankyou.html${statusQuery}`);
