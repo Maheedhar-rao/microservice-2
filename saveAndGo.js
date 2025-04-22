@@ -7,7 +7,7 @@ function saveAndGo() {
     maxNegativeDaysPerMonth: parseInt(document.getElementById('ned')?.value || '0'),
     industry: document.getElementById('industry')?.value?.trim().toLowerCase() || '-',
     restrictedStates: document.getElementById('state')?.value?.trim().toUpperCase() || '-',
-    positions: parseInt(document.getElementById('positions')?.value || '1'),  // <- added line
+    positions: parseInt(document.getElementById('positions')?.value?.replace(/\D/g, '') || '1')
     fundingRequested: parseInt(document.getElementById('amount')?.value || '0'),
     bankruptcy: document.getElementById('bankruptcy')?.value || 'no'
   };
