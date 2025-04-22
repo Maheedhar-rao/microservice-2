@@ -112,7 +112,7 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
 
   if (fetchError) {
     console.error('❌ Fetching max dealid failed:', fetchError);
-    return res.status(500).json({ message: 'Error fetching max deal ID' });
+    return res.redirect('/thankyou.html?success=0&failed=dealid');
   }
 
   const nextDealId = maxData && maxData[0]?.dealid ? maxData[0].dealid + 1 : 1;
