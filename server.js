@@ -39,7 +39,8 @@ const sendEmail = async (to, options) => {
 
 app.post('/send-email', upload.array('attachments', 25), async (req, res) => {
   try {
-    const { businessName, enteredData, selectedOptions, userEmail = 'unknown@user.com' } = req.body;
+    const { businessName, enteredData, selectedOptions } = req.body;
+    const userEmail = process.env.EMAIL_USER;
     const selectedLenders = Array.isArray(selectedOptions) ? selectedOptions : [selectedOptions];
 
     let uploadedFiles = [];
