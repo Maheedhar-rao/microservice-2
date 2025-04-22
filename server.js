@@ -8,8 +8,15 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// Serve static files from the root directory
+app.use(express.static(__dirname));
+
+// Serve index.html at the root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 const upload = multer({ storage: multer.memoryStorage() });
-app.use(express.static('public'));
 
 const lenderEmails = JSON.parse(fs.readFileSync('./lender-emails.json', 'utf-8'));
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
