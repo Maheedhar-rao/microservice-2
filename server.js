@@ -83,6 +83,24 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
     return res.status(500).json({ message: 'Email failed to send.', error: err.message });
   }
 
+  const uploadedFiles = [];
+  for (const file of files) {
+    const filePath = `submissions/${Date.now()}_${file.originalname}`;
+    const { error } = await supabase.storage
+      .from('Pdf docs/Apps and statements')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (!error) {
+      const { publicURL } = supabase.storage.from('Pdf docs/Apps and statements').getPublicUrl(filePath);
+      uploadedFiles.push(publicURL);
+    } else {
+      console.error('❌ File upload failed:', error);
+    }
+  }
+
   const { data: maxData } = await supabase
     .from('Live submissions')
     .select('dealid')
@@ -94,9 +112,12 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   await supabase.from('Live submissions').insert({
     business_name: businessName,
     lender_names: selectedOptions.join(', '),
-    docs: files.map(f => f.originalname).join(', '),
+    lenders_sent_to: selectedOptions,
+    docs: uploadedFiles.join(', '),
     message: enteredData,
-    dealid: nextDealId
+    dealid: nextDealId,
+    status: 'pending',
+    reply_progress: `0/${selectedOptions.length}`
   });
 
   const statusQuery = `?success=${successList.length}&failed=${failList.join('|')}`;
