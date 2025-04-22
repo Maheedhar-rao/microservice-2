@@ -415,43 +415,63 @@ fetch('test.json')
     const fico = parseInt(borrower.minFICO || 0);
     const rev = parseInt(borrower.minRevenueMonthly || borrower.fundingRequested || '0');
     const tib = parseInt(borrower.minTIB || 0);
+    const adb = parseInt(borrower.minADB || 0);
+    const ned = parseInt(borrower.maxNegativeDaysPerMonth || 0);
+    const pos = parseInt(borrower.positions || 1);
+    const amount = parseInt(borrower.fundingRequested || 0);
     const industry = (borrower.industry || '').toLowerCase();
     const state = (borrower.restrictedStates || '').toUpperCase();
 
-    console.log('Borrower:', { fico, rev, tib, industry, state });
+    console.log('Borrower:', { fico, rev, tib, adb, ned, pos, amount, industry, state });
 
     document.querySelectorAll('.lender').forEach(el => {
       const name = el.textContent.trim().replace(/\s+/g, '').replace(/[^a-zA-Z]/g, '');
 
-      const funder = Object.entries(funderRules).find(([key]) => 
+      const funder = Object.entries(funderRules).find(([key]) =>
         key.toLowerCase().replace(/[^a-z]/g, '') === name.toLowerCase()
       );
       if (!funder) return;
 
       const [lenderName, rule] = funder;
 
-      const minFICO = rule.minFICO || 0;
-      const minRev = rule.minRevenueMonthly || 0;
-      const minTIB = rule.minTIB || 0;
-
-      const industryPass = !((rule.restrictedIndustries || []).some(r => industry.includes(r.toLowerCase())));
-      const statePass = !((rule.restrictedStates || []).includes(state));
+      const isFICOOk = fico >= (rule.minFICO || 0);
+      const isRevenueOk = rev >= (rule.minRevenueMonthly || 0);
+      const isTIBOk = tib >= (rule.minTIB || 0);
+      const isADBok = adb >= (rule.minADB || 0);
+      const isNEDok = ned <= (rule.maxNegativeDaysPerMonth || 999);
+      const isPosOk = rule.positionsAccepted?.includes(pos);
+      const isAmountOk = amount >= (rule.fundingRange?.min || 0) && amount <= (rule.fundingRange?.max || Infinity);
+      const isIndustryOk = !(rule.restrictedIndustries || []).some(r => industry.includes(r.toLowerCase()));
+      const isStateOk = !(rule.restrictedStates || []).includes(state);
 
       let conditionalDecline = false;
       if (rule.conditionalDeclineRules) {
-        for (let cond of rule.conditionalDeclineRules) {
-          const i = (cond.industry || '').toLowerCase();
-          if (industry.includes(i)) {
-            if (cond.revenueLT && rev < cond.revenueLT) {
-              conditionalDecline = true;
-              break;
-            }
+        for (const cond of rule.conditionalDeclineRules) {
+          const matchIndustry = industry.includes((cond.industry || '').toLowerCase());
+          if (matchIndustry && cond.revenueLT && rev < cond.revenueLT) {
+            conditionalDecline = true;
+            break;
           }
         }
       }
 
-      if (fico >= minFICO && rev >= minRev && tib >= minTIB && industryPass && statePass && !conditionalDecline) {
+      const isApproved =
+        isFICOOk &&
+        isRevenueOk &&
+        isTIBOk &&
+        isADBok &&
+        isNEDok &&
+        isPosOk &&
+        isAmountOk &&
+        isIndustryOk &&
+        isStateOk &&
+        !conditionalDecline;
+
+      if (isApproved) {
         el.classList.add('selected');
+        el.style.backgroundColor = '#e0ffe0'; // Optional: visual highlight
+      } else {
+        el.classList.remove('selected');
       }
     });
   })
