@@ -285,6 +285,18 @@ function updateSelectedLenders() {
 }
 
 const selectedFiles = [];
+     async function ensurePDFLibLoaded() {
+  if (typeof PDFLib === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/pdf-lib/dist/pdf-lib.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Failed to load PDFLib'));
+      document.head.appendChild(script);
+    });
+  }
+}
+
 
 document.getElementById('file-upload').addEventListener('change', async function(event) {
     const files = Array.from(event.target.files);
@@ -302,6 +314,7 @@ document.getElementById('file-upload').addEventListener('change', async function
         if (file.type.startsWith('image/')) {
             watermarkedFile = await addImageWatermark(file, 'logo-pcp.png');
         } else if (file.type === 'application/pdf') {
+            await ensurePDFLibLoaded();
             watermarkedFile = await addPDFWatermark(file, 'CONFIDENTIAL', 'logo-pcp.png');
         } else {
             watermarkedFile = file;
