@@ -36,7 +36,7 @@ function authenticateToken(req, res, next) {
 
 // Redirect root to lender.html
 app.get('/', authenticateToken, (req, res) => {
-  res.redirect('/lender.html');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Protect lender.html and thankyou.html
