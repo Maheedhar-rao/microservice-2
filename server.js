@@ -12,8 +12,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const upload = multer({ storage: multer.memoryStorage() });
 
-app.use(cookieParser()); // <-- NEW
-app.use(express.static('.'));
+app.use(cookieParser()); 
+//app.use(express.static('.'));
 
 // Authentication Middleware
 function authenticateToken(req, res, next) {
