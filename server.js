@@ -4,19 +4,51 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+const cookieParser = require('cookie-parser'); 
+const jwt = require('jsonwebtoken');           
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const upload = multer({ storage: multer.memoryStorage() });
+
+app.use(cookieParser()); // <-- NEW
 app.use(express.static('.'));
 
+// Authentication Middleware
+function authenticateToken(req, res, next) {
+  const token = req.cookies.token;
+
+  if (!token) {
+    console.log('No token found');
+    return res.redirect('https://croccrm.com/login');
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      console.log('Invalid token:', err.message);
+      return res.redirect('https://croccrm.com/login');
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
 // Redirect root to lender.html
-app.get('/', (req, res) => {
+app.get('/', authenticateToken, (req, res) => {
   res.redirect('/lender.html');
 });
 
-// Test SMTP setup with health check
+// Protect lender.html and thankyou.html
+app.get('/lender.html', authenticateToken, (req, res) => {
+  res.sendFile(path.join(__dirname, 'lender.html'));
+});
+
+app.get('/thankyou.html', authenticateToken, (req, res) => {
+  res.sendFile(path.join(__dirname, 'thankyou.html'));
+});
+
+// SMTP health check
 app.get('/health', async (req, res) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -44,6 +76,7 @@ app.get('/health', async (req, res) => {
 const lenderEmails = JSON.parse(fs.readFileSync('./lender-emails.json', 'utf-8'));
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+// Handle form submissions
 app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
