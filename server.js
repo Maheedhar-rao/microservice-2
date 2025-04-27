@@ -13,7 +13,9 @@ const PORT = process.env.PORT || 3000;
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cookieParser()); 
-//app.use(express.static('.'));
+
+// 🔥 Serve static files from public folder (only public assets like logo, css, js)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Authentication Middleware
 function authenticateToken(req, res, next) {
@@ -34,12 +36,11 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Redirect root to lender.html
+// 🔒 Protected Routes for HTML files
 app.get('/', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Protect lender.html and thankyou.html
 app.get('/lender.html', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname, 'lender.html'));
 });
