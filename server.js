@@ -21,13 +21,13 @@ function authenticateToken(req, res, next) {
 
   if (!token) {
     console.log('No token found');
-    return res.redirect('https://croccrm.com/login');
+    return res.redirect('https://login.croccrm.com/login.html');
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       console.log('Invalid token:', err.message);
-      return res.redirect('https://croccrm.com/login');
+      return res.redirect('https://login.croccrm.com/login.html');
     }
     req.user = decoded;
     next();
