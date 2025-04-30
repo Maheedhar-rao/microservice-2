@@ -101,14 +101,14 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       cc: ccEmails,
-      subject: `New Submission - ${businessName}`
+      subject: `New Submission - Pathway Catalyst -  ${businessName}`
     });
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
-      cc: ccEmails,
-      subject: `New Submission - ${businessName}`,
+      cc: [ccEmails,'team@pathwaycatalyst.com'].filter(Boolean).join(','),
+      subject: `New Submission - Pathway Catalyst - ${businessName}`,
       text: enteredData,
       attachments: files.map(f => ({ filename: f.originalname, content: f.buffer }))
     });
