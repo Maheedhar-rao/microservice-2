@@ -89,7 +89,7 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const match = lenderEmails.emails.find(e =>
   e.business_name.trim().toLowerCase() === name.trim().toLowerCase()
 );
-     return {
+    return {
     name,
     email: match?.email || null
   }; 
@@ -99,11 +99,16 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const failList = recipientMap.filter(e => !e.email).map(e => e.name);
   //const ccEmails = recipientMap.map(e => e.email).filter(Boolean).join(',');
   
- const toEmails = recipientMap
-  .map(e => e.email)
-  .filter(Boolean)
-  .flatMap(email => email.split(',').map(e => e.trim()));
-  const ccEmails = ['team@pathwaycatalyst.com', process.env.EMAIL_USER];
+let toEmails = [];
+let ccEmails = [];
+
+recipientMap.forEach(({ email }) => {
+  if (!email) return;
+  const parts = email.split(',').map(e => e.trim());
+  if (parts[0]) toEmails.push(parts[0]);       // First → To
+  if (parts.length > 1) ccEmails.push(...parts.slice(1)); // Rest → Cc
+});
+
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -124,7 +129,7 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   await transporter.sendMail({
      from: process.env.EMAIL_USER,
      to: toEmails.join(','),
-     //cc: ccEmails.join(','),
+     cc: ccEmails.join(','),
       subject: `New Submission - Pathway Catalyst - ${businessName}`,
       text: enteredData,
       attachments: files.map(f => ({ filename: f.originalname, content: f.buffer }))
