@@ -99,45 +99,40 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const failList = recipientMap.filter(e => !e.email).map(e => e.name);
   //const ccEmails = recipientMap.map(e => e.email).filter(Boolean).join(',');
   
-let toEmails = [];
-let ccEmails = [];
-
-recipientMap.forEach(({ email }) => {
-  if (!email) return;
-  const parts = email.split(',').map(e => e.trim());
-  if (parts[0]) toEmails.push(parts[0]);       // First → To
-  if (parts.length > 1) ccEmails.push(...parts.slice(1)); // Rest → Cc
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
 });
 
+for (const { name, email } of recipientMap) {
+  if (!email) continue;
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
+  const parts = email.split(',').map(e => e.trim());
+  const to = parts[0];
+  const cc = parts.slice(1);
 
   try {
-    console.log('Sending email with:', {
-      from: process.env.EMAIL_USER,
-      to: toEmails.join(','),
-     // cc: ccEmails,
-      subject: `New Submission - Pathway Catalyst -  ${businessName}`
-    });
+    console.log(` Sending to: ${to} (cc: ${cc.join(', ')})`);
 
-  await transporter.sendMail({
-     from: process.env.EMAIL_USER,
-     to: toEmails.join(','),
-     cc: ccEmails.join(','),
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to,
+      cc: cc.join(','),
       subject: `New Submission - Pathway Catalyst - ${businessName}`,
       text: enteredData,
-      attachments: files.map(f => ({ filename: f.originalname, content: f.buffer }))
+      attachments: files.map(f => ({
+        filename: f.originalname,
+        content: f.buffer
+      }))
     });
   } catch (err) {
-    console.error('🔥 Email failed:', err);
-    return res.status(500).json({ message: 'Email failed to send.', error: err.message });
+    console.error(`🔥 Email to ${to} failed:`, err.message);
   }
+}
+
 
   const BUCKET = 'Pdf docs';
   const FOLDER = 'Apps and statements';
