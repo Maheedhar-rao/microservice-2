@@ -86,7 +86,10 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const recipientMap = selectedOptions.map(name => ({ name, email: lenderEmails[name] || null }));
   const successList = recipientMap.filter(e => e.email).map(e => e.name);
   const failList = recipientMap.filter(e => !e.email).map(e => e.name);
-  const ccEmails = recipientMap.map(e => e.email).filter(Boolean).join(',');
+  //const ccEmails = recipientMap.map(e => e.email).filter(Boolean).join(',');
+  
+  const toEmails = recipientMap.map(e => e.email).filter(Boolean);
+  const ccEmails = ['team@pathwaycatalyst.com', process.env.EMAIL_USER];
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -104,12 +107,10 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
       subject: `New Submission - Pathway Catalyst -  ${businessName}`
     });
 
-    const toEmails = recipientMap.map(e => e.email).filter(Boolean); // chosen lender emails
-   const ccEmails = ['team@pathwaycatalyst.com', process.env.EMAIL_USER]; // admin/internal
-
   await transporter.sendMail({
      from: process.env.EMAIL_USER,
      to: toEmails.join(','),
+     cc: ccEmails.join(','),
       subject: `New Submission - Pathway Catalyst - ${businessName}`,
       text: enteredData,
       attachments: files.map(f => ({ filename: f.originalname, content: f.buffer }))
