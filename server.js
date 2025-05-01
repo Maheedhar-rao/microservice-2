@@ -85,7 +85,13 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
   const files = req.files;
 
-  const recipientMap = selectedOptions.map(name => ({ name, email: lenderEmails[name] || null }));
+  const recipientMap = selectedOptions.map(name => {
+  const match = lenderEmails.emails.find(e => e.business_name === name);
+  return {
+    name,
+    email: match?.email || null
+  };
+});
   const successList = recipientMap.filter(e => e.email).map(e => e.name);
   const failList = recipientMap.filter(e => !e.email).map(e => e.name);
   //const ccEmails = recipientMap.map(e => e.email).filter(Boolean).join(',');
