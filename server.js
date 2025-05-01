@@ -110,7 +110,6 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   await transporter.sendMail({
      from: process.env.EMAIL_USER,
      to: toEmails.join(','),
-     cc: ccEmails.join(','),
       subject: `New Submission - Pathway Catalyst - ${businessName}`,
       text: enteredData,
       attachments: files.map(f => ({ filename: f.originalname, content: f.buffer }))
