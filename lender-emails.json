@@ -6,10 +6,10 @@
     },
     {
       "business_name": "Alternative",
-      "email": "teamauston@altfunding.com, uw@altfunding.com, team@pathwaycatalyst.com "
+      "email": "uw@altfunding.com, tim@altfunding.com, team@pathwaycatalyst.com "
     },
     {
-      "business_name": "American Choice",
+      "business_name": "American Choice",  
       "email": "alexa@americanchoicecapital.com, submissions@americanchoicecapital.com, team@pathwaycatalyst.com"
     },
     {
@@ -270,7 +270,7 @@
     },
     {
       "business_name": "QFS",
-      "email": "customerservice@qfscapital.com, samuel@qfscapital.com, submissions@qfscapital.com, team@pathwaycatalyst.com"
+      "email": "samuel@qfscapital.com, submissions@qfscapital.com, team@pathwaycatalyst.com"
     },
     {
       "business_name": "Quikstone",
@@ -495,6 +495,18 @@
     {
       "business_name": "Silverline",
       "email": "submissions@silverlinefunding.com, team@pathwaycatalyst.com"
+    },
+       {
+      "business_name": "GCM",
+      "email": "yasmine@gcmcapitalgroup.com,submissions@@gcmcapitalgroup.com, team@pathwaycatalyst.com "
+    },
+   {
+      "business_name": "Lion heart",
+      "email": "submissions@lhfunding.com, squesenberry@lnhfunding.com, team@pathwaycatalyst.com "
+    },
+   {
+      "business_name": "Forward Finance",
+      "email": "submissions@forwardfinancing.com, mjacobson@forwardfinancing.com, team@pathwaycatalyst.com "
     }
   ]
 }
