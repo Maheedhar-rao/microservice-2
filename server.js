@@ -89,6 +89,11 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const match = lenderEmails.emails.find(e =>
   e.business_name.trim().toLowerCase() === name.trim().toLowerCase()
 );
+     return {
+    name,
+    email: match?.email || null
+  }; 
+})
 
   const successList = recipientMap.filter(e => e.email).map(e => e.name);
   const failList = recipientMap.filter(e => !e.email).map(e => e.name);
