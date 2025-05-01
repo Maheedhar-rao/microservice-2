@@ -80,60 +80,57 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // Handle form submissions
 app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
-  // ✅ Log selectedOptions to debug what you're receiving
-  console.log('Selected Options:', req.body.selectedOptions);
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
   const files = req.files;
 
   const recipientMap = selectedOptions.map(name => {
-  const match = lenderEmails.emails.find(e =>
-  e.business_name.trim().toLowerCase() === name.trim().toLowerCase()
-);
+    const match = lenderEmails.emails.find(e =>
+      e.business_name.trim().toLowerCase() === name.trim().toLowerCase()
+    );
     return {
-    name,
-    email: match?.email || null
-  }; 
-})
+      name,
+      email: match?.email || null
+    };
+  });
 
   const successList = recipientMap.filter(e => e.email).map(e => e.name);
   const failList = recipientMap.filter(e => !e.email).map(e => e.name);
-  //const ccEmails = recipientMap.map(e => e.email).filter(Boolean).join(',');
-  
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  for (const { name, email } of recipientMap) {
+    if (!email) continue;
+
+    const parts = email.split(',').map(e => e.trim());
+    const to = [parts[0], process.env.EMAIL_USER]; 
+    const cc = parts.slice(1);                     
+
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        cc,
+        subject: `New Submission - Pathway Catalyst - ${businessName}`,
+        text: enteredData,
+        attachments: files.map(f => ({
+          filename: f.originalname,
+          content: f.buffer
+        }))
+      });
+
+      console.log(`✅ Email sent to ${to[0]} (cc: ${cc.join(', ')})`);
+    } catch (error) {
+      console.error(`🔥 Failed to send email to ${to[0]}:`, error);
+    }
   }
-});
 
-for (const { name, email } of recipientMap) {
-  if (!email) continue;
-
-  const parts = email.split(',').map(e => e.trim());
-  const to = parts[0];
-  const cc = parts.slice(1);
-
-  try {
-    console.log(` Sending to: ${to} (cc: ${cc.join(', ')})`);
-
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to,
-      cc: cc.join(','),
-      subject: `New Submission - Pathway Catalyst - ${businessName}`,
-      text: enteredData,
-      attachments: files.map(f => ({
-        filename: f.originalname,
-        content: f.buffer
-      }))
-    });
-  } catch (err) {
-    console.error(`🔥 Email to ${to} failed:`, err.message);
-  }
-}
-
-
+  // Supabase file upload
   const BUCKET = 'Pdf docs';
   const FOLDER = 'Apps and statements';
   const uploadedFiles = [];
