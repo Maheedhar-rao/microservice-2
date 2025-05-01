@@ -117,7 +117,8 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
         to,
         cc,
         subject: `New Submission - Pathway Catalyst - ${businessName}`,
-        text: enteredData,
+        text: `${enteredData}
+        ​`,
         attachments: files.map(f => ({
           filename: f.originalname,
           content: f.buffer
