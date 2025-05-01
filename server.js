@@ -104,10 +104,13 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
       subject: `New Submission - Pathway Catalyst -  ${businessName}`
     });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      cc: [ccEmails,'team@pathwaycatalyst.com'].filter(Boolean).join(','),
+    const toEmails = recipientMap.map(e => e.email).filter(Boolean); // chosen lender emails
+   const ccEmails = ['team@pathwaycatalyst.com', process.env.EMAIL_USER]; // admin/internal
+
+  await transporter.sendMail({
+     from: process.env.EMAIL_USER,
+     to: toEmails.join(','),
+     cc: ccEmails.join(','),
       subject: `New Submission - Pathway Catalyst - ${businessName}`,
       text: enteredData,
       attachments: files.map(f => ({ filename: f.originalname, content: f.buffer }))
