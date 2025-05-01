@@ -108,8 +108,8 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
     if (!email) continue;
 
     const parts = email.split(',').map(e => e.trim());
-    const to = parts[0]; 
-    const cc = [...parts.slice(1), process.env.EMAIL_USER];                    
+    const to = [parts[0], process.env.EMAIL_USER];; 
+    const cc = parts.slice(1);                    
 
     try {
       await transporter.sendMail({
