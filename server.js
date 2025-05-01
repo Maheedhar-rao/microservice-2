@@ -82,7 +82,6 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
   // ✅ Log selectedOptions to debug what you're receiving
   console.log('Selected Options:', req.body.selectedOptions);
-  console.log('Sending email to:', toEmails);
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
   const files = req.files;
 
