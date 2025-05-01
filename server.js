@@ -116,7 +116,9 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
         cc,
         subject: `New Submission - Pathway Catalyst - ${businessName}`,
         text: `${enteredData}
-        ​<!-- uid:${Date.now()}-${Math.random().toString(36).slice(2)} -->`,
+        ​---
+This email is confidential. Please do not forward or duplicate its contents without permission.
+ref: ${Math.random().toString(36).slice(2)}`,
         attachments: files.map(f => ({
           filename: f.originalname,
           content: f.buffer
