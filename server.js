@@ -14,10 +14,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cookieParser()); 
 
-// 🔥 Serve static files from public folder (only public assets like logo, css, js)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Authentication Middleware
 function authenticateToken(req, res, next) {
   const token = req.cookies.token;
 
@@ -36,7 +34,7 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// 🔒 Protected Routes for HTML files
+
 app.get('/', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -49,7 +47,7 @@ app.get('/thankyou.html', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname, 'thankyou.html'));
 });
 
-// SMTP health check
+
 app.get('/health', async (req, res) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -77,7 +75,7 @@ app.get('/health', async (req, res) => {
 const lenderEmails = JSON.parse(fs.readFileSync('./lender-emails.json', 'utf-8'));
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// Handle form submissions
+
 app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
@@ -118,7 +116,7 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
         cc,
         subject: `New Submission - Pathway Catalyst - ${businessName}`,
         text: `${enteredData}
-        ​`,
+        ​<!-- uid:${Date.now()}-${Math.random().toString(36).slice(2)} -->`,
         attachments: files.map(f => ({
           filename: f.originalname,
           content: f.buffer
