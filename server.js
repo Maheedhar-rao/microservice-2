@@ -123,7 +123,7 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
           content: f.buffer
         }))
       });
-
+      await new Promise(r => setTimeout(r, 250));
       console.log(`✅ Email sent to ${to[0]} (cc: ${cc.join(', ')})`);
     } catch (error) {
       console.error(`🔥 Failed to send email to ${to[0]}:`, error);
