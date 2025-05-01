@@ -80,6 +80,13 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // Handle form submissions
 app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
+  // ✅ Log selectedOptions to debug what you're receiving
+  console.log('Selected Options:', req.body.selectedOptions);
+
+  // Normalize: ensure it's always an array
+  const selectedOptions = Array.isArray(req.body.selectedOptions)
+    ? req.body.selectedOptions
+    : [req.body.selectedOptions];
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
   const files = req.files;
 
