@@ -82,11 +82,12 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
   // ✅ Log selectedOptions to debug what you're receiving
   console.log('Selected Options:', req.body.selectedOptions);
+  console.log('Sending email to:', toEmails);
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
   const files = req.files;
 
   const recipientMap = selectedOptions.map(name => {
-  const match = lenderEmails.emails.find(e => e.business_name === name);
+  const match = lenderEmails.emails.find(e => e.business_name === name.trim().toLowerCase());
   return {
     name,
     email: match?.email || null
@@ -96,7 +97,10 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const failList = recipientMap.filter(e => !e.email).map(e => e.name);
   //const ccEmails = recipientMap.map(e => e.email).filter(Boolean).join(',');
   
-  const toEmails = recipientMap.map(e => e.email).filter(Boolean);
+ const toEmails = recipientMap
+  .map(e => e.email)
+  .filter(Boolean)
+  .flatMap(email => email.split(',').map(e => e.trim()));
   const ccEmails = ['team@pathwaycatalyst.com', process.env.EMAIL_USER];
 
   const transporter = nodemailer.createTransport({
@@ -110,15 +114,15 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
   try {
     console.log('Sending email with:', {
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      cc: ccEmails,
+      to: toEmails.join(','),
+     // cc: ccEmails,
       subject: `New Submission - Pathway Catalyst -  ${businessName}`
     });
 
   await transporter.sendMail({
      from: process.env.EMAIL_USER,
      to: toEmails.join(','),
-     cc: ccEmails.join(','),
+     //cc: ccEmails.join(','),
       subject: `New Submission - Pathway Catalyst - ${businessName}`,
       text: enteredData,
       attachments: files.map(f => ({ filename: f.originalname, content: f.buffer }))
