@@ -76,6 +76,8 @@ const lenderEmails = JSON.parse(fs.readFileSync('./lender-emails.json', 'utf-8')
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 
+// 📨 FINAL send-email route (cleanly integrated)
+
 app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
@@ -106,8 +108,8 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
     if (!email) continue;
 
     const parts = email.split(',').map(e => e.trim());
-    const to = [parts[0], process.env.EMAIL_USER];; 
-    const cc = parts.slice(1);                    
+    const to = [parts[0], process.env.EMAIL_USER]; // Lender + your internal
+    const cc = parts.slice(1);                     // Remaining CC
 
     try {
       await transporter.sendMail({
@@ -116,7 +118,8 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
         cc,
         subject: `New Submission - Pathway Catalyst - ${businessName}`,
         text: `${enteredData}
-        ​---
+
+---
 This email is confidential. Please do not forward or duplicate its contents without permission.
 ref: ${Math.random().toString(36).slice(2)}`,
         attachments: files.map(f => ({
@@ -124,7 +127,9 @@ ref: ${Math.random().toString(36).slice(2)}`,
           content: f.buffer
         }))
       });
-      await new Promise(r => setTimeout(r, 250));
+
+      await new Promise(r => setTimeout(r, 250)); // Slow down to prevent Gmail threading
+
       console.log(`✅ Email sent to ${to[0]} (cc: ${cc.join(', ')})`);
     } catch (error) {
       console.error(`🔥 Failed to send email to ${to[0]}:`, error);
