@@ -363,6 +363,7 @@ async function addPDFWatermark(file, text, logoPath) {
     const res = await fetch(logoPath);
     const logoBytes = await res.arrayBuffer();
     const logoImage = await pdfDoc.embedPng(logoBytes);
+    const uniqueId = Math.random().toString(36).slice(2);
 
     for (const page of pages) {
         const { width, height } = page.getSize();
@@ -377,7 +378,7 @@ async function addPDFWatermark(file, text, logoPath) {
             opacity: 0.4
         });
 
-        page.drawText(text, {
+        page.drawText(`${text} | ID: ${uniqueId}`, {
             x: width / 2 - (text.length * 6),
             y: height / 2 - 40,
             size: 24,
