@@ -113,20 +113,18 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
 
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to,
-        cc,
-        subject: `New Submission - Pathway Catalyst - ${businessName}`,
-        text: `${enteredData}
+  from: process.env.EMAIL_USER,
+  to: parts[0],
+  bcc: process.env.EMAIL_USER,
+  cc: parts.slice(1),
+  subject: `New Submission - Pathway Catalyst - ${businessName}`,
+  text: `${enteredData}\n\n---\nThis email is confidential. Please do not forward or duplicate its contents without permission.\nref: ${Math.random().toString(36).slice(2)}`,
+  attachments: files.map(f => ({
+    filename: f.originalname,
+    content: f.buffer
+  }))
+});
 
----
-This email is confidential. Please do not forward or duplicate its contents without permission.
-ref: ${Math.random().toString(36).slice(2)}`,
-        attachments: files.map(f => ({
-          filename: f.originalname,
-          content: f.buffer
-        }))
-      });
 
       await new Promise(r => setTimeout(r, 250)); // Slow down to prevent Gmail threading
 
