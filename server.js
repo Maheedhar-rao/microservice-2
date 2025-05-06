@@ -142,7 +142,7 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
     const cc = parts.slice(1);
 
     const submissionToken = `${nextDealId}-${name.replace(/\s+/g, '')}`;
-    const subjectLine = `New Submission - Pathway Catalyst - ${businessName} - #${nextDealId}`;
+    const subjectLine = `New Submission - Pathway Catalyst - ${businessName} - #${nextDealId} - ${name.replace(/\s+/g, '')}`;
 
     try {
       const info = await transporter.sendMail({
