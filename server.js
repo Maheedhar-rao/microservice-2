@@ -76,8 +76,6 @@ const lenderEmails = JSON.parse(fs.readFileSync('./lender-emails.json', 'utf-8')
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 
-// 📨 FINAL send-email route (cleanly integrated)
-
 app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
   const selectedOptions = Array.isArray(req.body.selectedOptions) ? req.body.selectedOptions : [req.body.selectedOptions];
@@ -104,37 +102,52 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
     }
   });
 
+  const { data: maxData, error: fetchError } = await supabase
+    .from('Live submissions')
+    .select('dealid')
+    .order('dealid', { ascending: false })
+    .limit(1);
+
+  if (fetchError) {
+    console.error('❌ Fetching max dealid failed:', fetchError);
+    return res.redirect('/thankyou.html?success=0&failed=dealid');
+  }
+
+  const nextDealId = maxData && maxData[0]?.dealid ? maxData[0].dealid + 1 : 1;
+
   for (const { name, email } of recipientMap) {
     if (!email) continue;
 
     const parts = email.split(',').map(e => e.trim());
-    const to = [parts[0], process.env.EMAIL_USER]; // Lender + your internal
-    const cc = parts.slice(1);                     // Remaining CC
+    const to = [parts[0]];
+    const cc = parts.slice(1);
+
+    const submissionToken = `${nextDealId}-${name.replace(/\s+/g, '')}`;
 
     try {
-      await transporter.sendMail({
-  from: process.env.EMAIL_USER,
-  to: parts[0],
-  bcc: process.env.EMAIL_USER,
-  cc: parts.slice(1),
-  subject: `New Submission - Pathway Catalyst - ${businessName}`,
-  text: `${enteredData}\n\n---\nThis email is confidential. Please do not forward or duplicate its contents without permission.\nref: ${Math.random().toString(36).slice(2)}`,
-  attachments: files.map(f => ({
-    filename: f.originalname,
-    content: f.buffer
-  }))
-});
+      const info = await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        cc,
+        subject: `New Submission - Pathway Catalyst - ${businessName} [#${submissionToken}]`,
+        text: `${enteredData}
 
+---
+This email is confidential. Please do not forward or duplicate its contents without permission.
+submission-id: ${submissionToken}`,
+        attachments: files.map(f => ({
+          filename: f.originalname,
+          content: f.buffer
+        }))
+      });
 
-      await new Promise(r => setTimeout(r, 250)); // Slow down to prevent Gmail threading
-
-      console.log(`✅ Email sent to ${to[0]} (cc: ${cc.join(', ')})`);
+      console.log(`✉️ Sent to ${to[0]} | Message-ID: ${info.messageId}`);
+      await new Promise(r => setTimeout(r, 250));
     } catch (error) {
       console.error(`🔥 Failed to send email to ${to[0]}:`, error);
     }
   }
 
-  // Supabase file upload
   const BUCKET = 'Pdf docs';
   const FOLDER = 'Apps and statements';
   const uploadedFiles = [];
@@ -155,19 +168,6 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
       console.error('❌ File upload failed:', uploadError);
     }
   }
-
-  const { data: maxData, error: fetchError } = await supabase
-    .from('Live submissions')
-    .select('dealid')
-    .order('dealid', { ascending: false })
-    .limit(1);
-
-  if (fetchError) {
-    console.error('❌ Fetching max dealid failed:', fetchError);
-    return res.redirect('/thankyou.html?success=0&failed=dealid');
-  }
-
-  const nextDealId = maxData && maxData[0]?.dealid ? maxData[0].dealid + 1 : 1;
 
   const { error: insertError, data: inserted } = await supabase.from('Live submissions').insert([{
     business_name: businessName,
