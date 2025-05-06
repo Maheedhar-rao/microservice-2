@@ -13,7 +13,6 @@ const PORT = process.env.PORT || 3000;
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cookieParser()); 
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 function authenticateToken(req, res, next) {
@@ -34,7 +33,6 @@ function authenticateToken(req, res, next) {
   });
 }
 
-
 app.get('/', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -46,7 +44,6 @@ app.get('/lender.html', authenticateToken, (req, res) => {
 app.get('/thankyou.html', authenticateToken, (req, res) => {
   res.sendFile(path.join(__dirname, 'thankyou.html'));
 });
-
 
 app.get('/health', async (req, res) => {
   try {
@@ -74,7 +71,6 @@ app.get('/health', async (req, res) => {
 
 const lenderEmails = JSON.parse(fs.readFileSync('./lender-emails.json', 'utf-8'));
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
 
 app.post('/send-email', upload.array('attachments'), async (req, res) => {
   const { businessName, enteredData } = req.body;
@@ -115,51 +111,7 @@ app.post('/send-email', upload.array('attachments'), async (req, res) => {
 
   const nextDealId = maxData && maxData[0]?.dealid ? maxData[0].dealid + 1 : 1;
 
-  for (const { name, email } of recipientMap) {
-    if (!email) continue;
-
-    const parts = email.split(',').map(e => e.trim());
-    const to = [parts[0]];
-    const cc = parts.slice(1);
-
-    const submissionToken = `${nextDealId}-${name.replace(/\s+/g, '')}`;
-    const subjectLine = `New Submission - Pathway Catalyst - ${businessName} - #${nextDealId}`;
-
-
-    try {
-      const info = await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to,
-        cc,
-        subject: subjectLine,
-        text: `${enteredData}
-
----
-This email is confidential. Please do not forward or duplicate its contents without permission.
-submission-id: ${submissionToken}`,
-        attachments: files.map(f => ({
-          filename: f.originalname,
-          content: f.buffer
-        }))
-      });
-
-      console.log(`✉️ Sent to ${to[0]} | Message-ID: ${info.messageId}`);
-      const { error: insertError, data: inserted } = await supabase.from('Live submissions').insert([{
-    business_name: businessName,
-    lender_names: selectedOptions.join(', '),
-    docs: uploadedFiles.join(', '),
-    message: enteredData,
-    dealid: nextDealId,
-    submission_id: submissionToken,    
-    message_id: info.messageId  
-  }]);
-
-      await new Promise(r => setTimeout(r, 250));
-    } catch (error) {
-      console.error(`🔥 Failed to send email to ${to[0]}:`, error);
-    }
-  }
-
+  // 📤 Upload files once before email loop
   const BUCKET = 'Pdf docs';
   const FOLDER = 'Apps and statements';
   const uploadedFiles = [];
@@ -181,13 +133,51 @@ submission-id: ${submissionToken}`,
     }
   }
 
- 
-  if (insertError) {
-    console.error('❌ DB insert failed:', insertError);
-    return res.status(500).json({ message: 'DB insert failed', error: insertError.message });
-  }
+  // 📧 Send email + insert one row per lender
+  for (const { name, email } of recipientMap) {
+    if (!email) continue;
 
-  console.log('✅ Supabase submission recorded:', inserted);
+    const parts = email.split(',').map(e => e.trim());
+    const to = [parts[0]];
+    const cc = parts.slice(1);
+
+    const submissionToken = `${nextDealId}-${name.replace(/\s+/g, '')}`;
+    const subjectLine = `New Submission - Pathway Catalyst - ${businessName} - #${nextDealId}`;
+
+    try {
+      const info = await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        cc,
+        subject: subjectLine,
+        text: `${enteredData}
+
+---
+This email is confidential. Please do not forward or duplicate its contents without permission.
+submission-id: ${submissionToken}`,
+        attachments: files.map(f => ({
+          filename: f.originalname,
+          content: f.buffer
+        }))
+      });
+
+      console.log(`✉️ Sent to ${to[0]} | Message-ID: ${info.messageId}`);
+
+      await supabase.from('Live submissions').insert([{
+        business_name: businessName,
+        lender_names: name,
+        docs: uploadedFiles.join(', '),
+        message: enteredData,
+        dealid: nextDealId,
+        submission_id: submissionToken,
+        message_id: info.messageId
+      }]);
+
+      await new Promise(r => setTimeout(r, 250));
+    } catch (error) {
+      console.error(`🔥 Failed to send email to ${to[0]}:`, error);
+    }
+  }
 
   const statusQuery = `?success=${successList.length}&failed=${failList.join('|')}`;
   res.redirect(`/thankyou.html${statusQuery}`);
