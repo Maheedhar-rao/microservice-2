@@ -357,7 +357,8 @@ async function addImageWatermark(file, logoPath) {
 
 async function addPDFWatermark(file, text, logoPath) {
     const existingPdfBytes = await file.arrayBuffer();
-    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes, {
+  ignoreEncryption: true);
     const pages = pdfDoc.getPages();
 
     const res = await fetch(logoPath);
