@@ -144,6 +144,16 @@ submission-id: ${submissionToken}`,
       });
 
       console.log(`✉️ Sent to ${to[0]} | Message-ID: ${info.messageId}`);
+      const { error: insertError, data: inserted } = await supabase.from('Live submissions').insert([{
+    business_name: businessName,
+    lender_names: selectedOptions.join(', '),
+    docs: uploadedFiles.join(', '),
+    message: enteredData,
+    dealid: nextDealId,
+    submission_id: submissionToken,    
+    message_id: info.messageId  
+  }]);
+
       await new Promise(r => setTimeout(r, 250));
     } catch (error) {
       console.error(`🔥 Failed to send email to ${to[0]}:`, error);
@@ -171,16 +181,7 @@ submission-id: ${submissionToken}`,
     }
   }
 
-  const { error: insertError, data: inserted } = await supabase.from('Live submissions').insert([{
-    business_name: businessName,
-    lender_names: selectedOptions.join(', '),
-    docs: uploadedFiles.join(', '),
-    message: enteredData,
-    dealid: nextDealId,
-    submission_id: submissionToken,    
-  message_id: info.messageId  
-  }]);
-
+ 
   if (insertError) {
     console.error('❌ DB insert failed:', insertError);
     return res.status(500).json({ message: 'DB insert failed', error: insertError.message });
