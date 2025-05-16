@@ -350,141 +350,187 @@ async function addImageWatermark(file, logoPath) {
 }
 
 async function addPDFWatermark(file, text, logoPath) {
-    const existingPdfBytes = await file.arrayBuffer();
-    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes, {
-  ignoreEncryption: true});
-    const pages = pdfDoc.getPages();
+  const existingPdfBytes = await file.arrayBuffer();
+  const uniqueId = Math.random().toString(36).slice(2);
+  let finalBytes;
 
+  try {
+    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes, {
+      ignoreEncryption: false,
+    });
+
+    const pages = pdfDoc.getPages();
     const res = await fetch(logoPath);
     const logoBytes = await res.arrayBuffer();
     const logoImage = await pdfDoc.embedPng(logoBytes);
-    const uniqueId = Math.random().toString(36).slice(2);
 
     for (const page of pages) {
-        const { width, height } = page.getSize();
-        const logoWidth = 100;
-        const logoHeight = 100;
+      const { width, height } = page.getSize();
 
-        page.drawImage(logoImage, {
-            x: (width - logoWidth) / 2,
-            y: (height - logoHeight) / 2 + 30,
-            width: logoWidth,
-            height: logoHeight,
-            opacity: 0.4
-        });
+      page.drawImage(logoImage, {
+        x: (width - 100) / 2,
+        y: (height - 100) / 2 + 30,
+        width: 100,
+        height: 100,
+        opacity: 0.4,
+      });
 
-        page.drawText(`${text} | ID: ${uniqueId}`, {
-            x: width / 2 - (text.length * 6),
-            y: height / 2 - 40,
-            size: 24,
-            color: PDFLib.rgb(1, 0, 0),
-            opacity: 0.3
-        });
+      page.drawText(`${text} | ID: ${uniqueId}`, {
+        x: width / 2 - (text.length * 6),
+        y: height / 2 - 40,
+        size: 24,
+        color: PDFLib.rgb(1, 0, 0),
+        opacity: 0.3,
+      });
     }
 
-    const pdfBytes = await pdfDoc.save();
-    return new File([pdfBytes], file.name, { type: 'application/pdf' });
+    finalBytes = await pdfDoc.save();
+    await PDFLib.PDFDocument.load(finalBytes); // validate output
+
+  } catch (err) {
+    console.warn('⚠️ Full watermark failed. Retrying with ID-only:', err.message);
+
+    try {
+      const fallbackDoc = await PDFLib.PDFDocument.load(existingPdfBytes, {
+        ignoreEncryption: true,
+      });
+
+      const pages = fallbackDoc.getPages();
+      for (const page of pages) {
+        page.drawText(`ID: ${uniqueId}`, {
+          x: 20,
+          y: 20,
+          size: 10,
+          color: PDFLib.rgb(0.5, 0.5, 0.5),
+          opacity: 0.5,
+        });
+      }
+
+      finalBytes = await fallbackDoc.save();
+      await PDFLib.PDFDocument.load(finalBytes); // validate
+    } catch (err2) {
+      console.error('❌ Even ID-only fallback failed:', err2.message);
+      alert(`Could not process ${file.name}. Sending as-is.`);
+      return file;
+    }
+  }
+
+  return new File([finalBytes], file.name, { type: 'application/pdf' });
 }
 
 function updateFileList() {
-    const fileListDiv = document.getElementById('file-list');
-    fileListDiv.innerHTML = '';
+  const fileListDiv = document.getElementById('file-list');
+  fileListDiv.innerHTML = '';
 
-    selectedFiles.forEach((file, index) => {
-        const listItem = document.createElement('div');
-        listItem.style.display = 'flex';
-        listItem.style.alignItems = 'center';
-        listItem.style.justifyContent = 'center';
-        listItem.style.marginBottom = '8px';
-        listItem.style.fontSize = '14px';
-        listItem.style.fontWeight = 'bold';
+  selectedFiles.forEach((file, index) => {
+    const listItem = document.createElement('div');
+    listItem.style.display = 'flex';
+    listItem.style.flexDirection = 'column';
+    listItem.style.alignItems = 'center';
+    listItem.style.marginBottom = '16px';
+    listItem.style.fontSize = '14px';
+    listItem.style.fontWeight = 'bold';
+    listItem.style.border = '1px solid #ccc';
+    listItem.style.borderRadius = '6px';
+    listItem.style.padding = '10px';
+    listItem.style.backgroundColor = '#f9f9f9';
 
-        if (file.type.startsWith('image/')) {
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            img.style.width = '50px';
-            img.style.height = '50px';
-            img.style.borderRadius = '6px';
-            img.style.marginRight = '10px';
-            img.onload = () => URL.revokeObjectURL(img.src);
-            listItem.appendChild(img);
-        }
+    const fileName = document.createElement('span');
+    fileName.textContent = file.name;
+    fileName.style.marginBottom = '6px';
+    listItem.appendChild(fileName);
 
-        const fileName = document.createElement('span');
-        fileName.textContent = file.name;
-        listItem.appendChild(fileName);
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.width = '60px';
+      img.style.height = '60px';
+      img.style.borderRadius = '6px';
+      img.style.marginBottom = '6px';
+      img.onload = () => URL.revokeObjectURL(img.src);
+      listItem.appendChild(img);
+    }
 
-        const removeBtn = document.createElement('span');
-        removeBtn.innerHTML = ' ❌';
-        removeBtn.style.cursor = 'pointer';
-        removeBtn.style.color = 'red';
-        removeBtn.style.marginLeft = '10px';
-        removeBtn.onclick = function () {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-        };
-        listItem.appendChild(removeBtn);
+    if (file.type === 'application/pdf') {
+      const iframe = document.createElement('iframe');
+      iframe.src = URL.createObjectURL(file);
+      iframe.style.width = '100%';
+      iframe.style.height = '200px';
+      iframe.style.border = '1px solid #888';
+      iframe.onload = () => URL.revokeObjectURL(iframe.src);
+      listItem.appendChild(iframe);
+    }
 
-        fileListDiv.appendChild(listItem);
+    const removeBtn = document.createElement('span');
+    removeBtn.innerHTML = ' ❌';
+    removeBtn.style.cursor = 'pointer';
+    removeBtn.style.color = 'red';
+    removeBtn.style.marginTop = '6px';
+    removeBtn.onclick = function () {
+      selectedFiles.splice(index, 1);
+      updateFileList();
+    };
+    listItem.appendChild(removeBtn);
+
+    fileListDiv.appendChild(listItem);
+  });
+}
+
+function submitForm() {
+  const businessName = document.getElementById('business-name').value;
+  const selectedLenders = [...document.querySelectorAll('.lender.selected')].map(el => el.textContent);
+  const message = document.getElementById('message-box').value;
+  const submitButton = document.querySelector('.submit-btn');
+
+  if (!businessName) {
+    alert('Please enter a business name.');
+    return;
+  }
+
+  if (selectedLenders.length === 0) {
+    alert('Please select at least one lender.');
+    return;
+  }
+
+  // Disable the button & show processing state
+  submitButton.disabled = true;
+  submitButton.style.background = '#ccc';
+  submitButton.textContent = 'Hold On...';
+
+  const formData = new FormData();
+  formData.append('businessName', businessName);
+  formData.append('enteredData', message);
+  selectedLenders.forEach(lender => formData.append('selectedOptions', lender));
+
+  for (let file of selectedFiles) {
+    formData.append('attachments', file);
+  }
+
+  fetch('/send-email', {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => {
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else {
+        return response.json();
+      }
+    })
+    .then(data => {
+      if (data?.message === 'Submission successful!') {
+        window.location.href = 'https://dashboard.croccrm.com/';
+      }
+    })
+    .catch(error => {
+      console.error('Error submitting:', error);
+      alert('Error submitting. Please try again.');
+      submitButton.disabled = false;
+      submitButton.style.background = 'linear-gradient(to right, #ff512f, #dd2476)';
+      submitButton.textContent = 'Submit';
     });
 }
 
-
-function submitForm() {
-    const businessName = document.getElementById('business-name').value;
-    const selectedLenders = [...document.querySelectorAll('.lender.selected')].map(el => el.textContent);
-    const message = document.getElementById('message-box').value;
-    const submitButton = document.querySelector('.submit-btn');
-
-    if (!businessName) {
-        alert('Please enter a business name.');
-        return;
-    }
-
-    if (selectedLenders.length === 0) {
-        alert('Please select at least one lender.');
-        return;
-    }
-
-    // Disable the button & show processing state
-    submitButton.disabled = true;
-    submitButton.style.background = '#ccc';
-    submitButton.textContent = 'Hold On...';
-
-    const formData = new FormData();
-    formData.append('businessName', businessName);
-    formData.append('enteredData', message);
-    selectedLenders.forEach(lender => formData.append('selectedOptions', lender));
-
-    for (let file of selectedFiles) {
-        formData.append('attachments', file);
-    }
-
-    fetch('/send-email', {
-  method: 'POST',
-  body: formData
-})
-.then(response => {
-  if (response.redirected) {
-    window.location.href = response.url; // Follow the redirect
-  } else {
-    return response.json();
-  }
-})
-.then(data => {
-  if (data?.message === 'Submission successful!') {
-    window.location.href = '/thankyou.html';
-  }
-})
-.catch(error => {
-  console.error('Error submitting:', error);
-  alert('Error submitting. Please try again.');
-  submitButton.disabled = false;
-  submitButton.style.background = 'linear-gradient(to right, #ff512f, #dd2476)';
-  submitButton.textContent = 'Submit';
-});
-
-}
 // ⬇️ Auto-match logic from localStorage
 fetch('test.json')
   .then(res => res.json())
