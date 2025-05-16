@@ -596,6 +596,28 @@ fetch('test.json')
       } else {
         el.classList.remove('selected');
       }
+const creditCardSplitsChecked = borrower.creditCardSplits;
+const reversesChecked = borrower.reverses;
+
+const reversalLenders = [
+  'alternative','americanchoice','arena','barclays','fenix','finpoint','fyncap','gandg',
+  'gfe','highlandhill','nexus','nitro','ocean','smartstep'
+];
+
+const ccSplitLenders = [
+  'broadway','fenix','fundfi','fundkite','fundr','rapid','smartstep','tmrnow',
+  'quickstone','zinch','501advance'
+];
+
+const normalizedName = name.toLowerCase();
+
+if (
+  (reversesChecked && reversalLenders.includes(normalizedName)) ||
+  (creditCardSplitsChecked && ccSplitLenders.includes(normalizedName))
+) {
+  el.classList.add('selected');
+}
+
     });
   })
   .catch(err => console.error('Auto-match fetch error:', err));
