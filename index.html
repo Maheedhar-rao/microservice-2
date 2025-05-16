@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lender Match Input</title>
   <style>
     body {
@@ -10,9 +10,18 @@
       background: #f4f4f4;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      align-items: flex-start;
+      padding: 40px;
+      min-height: 100vh;
     }
+
+    .main-flex {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
     .container {
       background: white;
       padding: 40px;
@@ -21,38 +30,41 @@
       width: 100%;
       max-width: 500px;
     }
+
     .checkbox-container {
-  background: white;
-  padding: 30px 40px;
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  justify-content: center;
-  min-width: 300px;
-}
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-width: 250px;
+      max-width: 300px;
+    }
 
-.checkbox-container h3 {
-  text-align: center;
-  margin: 0;
-  font-size: 22px;
-  color: #2c3e50;
-}
+    .checkbox-container h3 {
+      margin-bottom: 20px;
+      font-size: 20px;
+      text-align: left;
+      color: #2c3e50;
+    }
 
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-}
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 15px;
+    }
 
     h2 {
       text-align: center;
       color: #2c3e50;
     }
+
     input, select {
       width: 100%;
       padding: 10px;
@@ -61,6 +73,7 @@
       border-radius: 6px;
       font-size: 16px;
     }
+
     button {
       width: 100%;
       padding: 12px;
@@ -72,66 +85,70 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     button:hover {
       background: #2c3e50;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-  <h2>Enter Borrower Profile</h2>
-  <input type="text" id="minFICO" placeholder="FICO Score">
-  <input type="text" id="minRevenueMonthly" placeholder="Monthly Revenue ($)">
-  <input type="text" id="minADB" placeholder="Average Daily Balance ($)">
-  <input type="text" id="minTIB" placeholder="Time in Business (months)">
-  <input type="text" id="maxNegativeDaysPerMonth" placeholder="Negative Days">
-  <select id="bankruptcy">
-    <option value="no">Bankruptcy: No</option>
-    <option value="yes">Bankruptcy: Yes</option>
-  </select>
-  <input type="text" id="industry" placeholder="Industry">
-  <input type="text" id="restrictedStates" placeholder="State">
-  <input type="text" id="positions" placeholder="Current Position (e.g. 1st, 2nd)">
-  <input type="text" id="fundingRequested" placeholder="Requested Amount ($)">
-  <button onclick="saveAndRedirect()">Override / Find Lenders</button>
-</div>
- <div class="checkbox-container">
-  <h3>What's on your mind</h3>
-  <label class="checkbox-group">
-    <input type="checkbox" id="creditCardSplits">
-    Credit Card Splits
-  </label>
-  <label class="checkbox-group">
-    <input type="checkbox" id="reverses">
-    Reverses
-  </label>
-</div>
+  <div class="main-flex">
+    <div class="container">
+      <h2>Enter Borrower Profile</h2>
+      <input type="text" id="minFICO" placeholder="FICO Score" />
+      <input type="text" id="minRevenueMonthly" placeholder="Monthly Revenue ($)" />
+      <input type="text" id="minADB" placeholder="Average Daily Balance ($)" />
+      <input type="text" id="minTIB" placeholder="Time in Business (months)" />
+      <input type="text" id="maxNegativeDaysPerMonth" placeholder="Negative Days" />
+      <select id="bankruptcy">
+        <option value="no">Bankruptcy: No</option>
+        <option value="yes">Bankruptcy: Yes</option>
+      </select>
+      <input type="text" id="industry" placeholder="Industry" />
+      <input type="text" id="restrictedStates" placeholder="State" />
+      <input type="text" id="positions" placeholder="Current Position (e.g. 1st, 2nd)" />
+      <input type="text" id="fundingRequested" placeholder="Requested Amount ($)" />
+      <button onclick="saveAndRedirect()">Override / Find Lenders</button>
+    </div>
 
-<script>
-  function saveAndRedirect() {
-    const fields = [
-      'minFICO',
-      'minRevenueMonthly',
-      'minADB',
-      'minTIB',
-      'maxNegativeDaysPerMonth',
-      'bankruptcy',
-      'industry',
-      'restrictedStates',
-      'positions',
-      'fundingRequested'
-    ];
-    
-    const data = {};
-    fields.forEach(id => {
-      data[id] = document.getElementById(id).value;
-    });
-    
-    data['creditCardSplits'] = document.getElementById('creditCardSplits').checked;
-    data['reverses'] = document.getElementById('reverses').checked;
-    localStorage.setItem('borrowerData', JSON.stringify(data));
-    window.location.href = 'lender.html';
-  }
-</script>
+    <div class="checkbox-container">
+      <h3>What's on your mind</h3>
+      <label class="checkbox-group">
+        <input type="checkbox" id="creditCardSplits" />
+        <span>Credit Card Splits</span>
+      </label>
+      <label class="checkbox-group">
+        <input type="checkbox" id="reverses" />
+        <span>Reverses</span>
+      </label>
+    </div>
+  </div>
+
+  <script>
+    function saveAndRedirect() {
+      const fields = [
+        'minFICO',
+        'minRevenueMonthly',
+        'minADB',
+        'minTIB',
+        'maxNegativeDaysPerMonth',
+        'bankruptcy',
+        'industry',
+        'restrictedStates',
+        'positions',
+        'fundingRequested'
+      ];
+      
+      const data = {};
+      fields.forEach(id => {
+        data[id] = document.getElementById(id).value;
+      });
+      
+      data['creditCardSplits'] = document.getElementById('creditCardSplits').checked;
+      data['reverses'] = document.getElementById('reverses').checked;
+      localStorage.setItem('borrowerData', JSON.stringify(data));
+      window.location.href = 'lender.html';
+    }
+  </script>
 </body>
 </html>
