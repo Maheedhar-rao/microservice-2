@@ -21,6 +21,34 @@
       width: 100%;
       max-width: 500px;
     }
+    .checkbox-container {
+  background: white;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  justify-content: center;
+  min-width: 300px;
+}
+
+.checkbox-container h3 {
+  text-align: center;
+  margin: 0;
+  font-size: 22px;
+  color: #2c3e50;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
     h2 {
       text-align: center;
       color: #2c3e50;
@@ -67,12 +95,18 @@
   <input type="text" id="fundingRequested" placeholder="Requested Amount ($)">
   <button onclick="saveAndRedirect()">Override / Find Lenders</button>
 </div>
-  <div class="container">
-     <h2>What's on your mind</h2>
-      <label><input type="checkbox" id="creditCardSplits"> Credit Card Splits</label>
-      <label><input type="checkbox" id="reverses"> Reverses</label>
-    </div>
-  </div>
+ <div class="checkbox-container">
+  <h3>What's on your mind</h3>
+  <label class="checkbox-group">
+    <input type="checkbox" id="creditCardSplits">
+    Credit Card Splits
+  </label>
+  <label class="checkbox-group">
+    <input type="checkbox" id="reverses">
+    Reverses
+  </label>
+</div>
+
 <script>
   function saveAndRedirect() {
     const fields = [
