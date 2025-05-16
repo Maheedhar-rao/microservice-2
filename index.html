@@ -67,6 +67,11 @@
   <input type="text" id="fundingRequested" placeholder="Requested Amount ($)">
   <button onclick="saveAndRedirect()">Override / Find Lenders</button>
 </div>
+  <div class="checkbox-container">
+      <label><input type="checkbox" id="creditCardSplits"> Credit Card Splits</label>
+      <label><input type="checkbox" id="reverses"> Reverses</label>
+    </div>
+  </div>
 <script>
   function saveAndRedirect() {
     const fields = [
@@ -86,7 +91,9 @@
     fields.forEach(id => {
       data[id] = document.getElementById(id).value;
     });
-
+    
+    data['creditCardSplits'] = document.getElementById('creditCardSplits').checked;
+    data['reverses'] = document.getElementById('reverses').checked;
     localStorage.setItem('borrowerData', JSON.stringify(data));
     window.location.href = 'lender.html';
   }
